@@ -27,8 +27,6 @@ namespace Domain.Entities
                 }
                 return _edad;
             }
-
-            set; 
         }
     }
 }
