@@ -12,6 +12,7 @@ builder.Services.AddApplicationLayer();
 builder.Services.AddSharedInfraestructure(builder.Configuration);
 builder.Services.AddPersistenceInfraestructure(builder.Configuration);
 builder.Services.AddControllers();
+builder.Services.AddApiVersioningExtension();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

@@ -34,16 +34,19 @@ namespace Persistence.Context
                 switch (entry.State)
                 {
                     case EntityState.Added:
+                        entry.Entity.CreatedBy = "Usuario Ejemplo";
+                        entry.Entity.LastModifiedBy = "Inicial";
                         entry.Entity.Created = _dateTime.NowUtc;
                         break;
                     case EntityState.Modified:
+                        entry.Entity.LastModifiedBy = "Usuario Ejemplo";
                         entry.Entity.LastModified = _dateTime.NowUtc;
                         break;
+
                 }
             }
             return base.SaveChangesAsync(cancellationToken);
         }
-
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
