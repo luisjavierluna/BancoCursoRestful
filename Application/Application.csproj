@@ -16,7 +16,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Features\Clientes\Queries\GetAllClientes\" />
     <Folder Include="Filters\" />
   </ItemGroup>
 
