@@ -27,6 +27,10 @@ namespace Domain.Entities
                 }
                 return _edad;
             }
+            set
+            {
+                this._edad = value;
+            }
         }
     }
 }
