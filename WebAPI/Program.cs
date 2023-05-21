@@ -1,7 +1,11 @@
 using Application;
+using Identity.Models;
+using Identity.Seeds;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Persistence;
 using Shared;
+using System;
 using WebAPI.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,4 +38,27 @@ app.UseErrorHandlingMiddleware();
 
 app.MapControllers();
 
-app.Run();
+try
+{
+    await SeedUsers();
+
+    app.Run();
+
+}
+catch (Exception ex)
+{
+
+    throw;
+}
+
+
+async Task SeedUsers()
+{
+    using var scope = app.Services.CreateScope();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+    await DefaultRoles.SeedAsync(userManager, roleManager);
+    await DefaultAdminUser.SeedAsync(userManager, roleManager);
+    await DefaultBasicUser.SeedAsync(userManager, roleManager);
+}
