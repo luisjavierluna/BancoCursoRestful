@@ -1,4 +1,5 @@
 using Application;
+using Identity;
 using Identity.Models;
 using Identity.Seeds;
 using Microsoft.AspNetCore.Identity;
@@ -13,6 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddApplicationLayer();
+builder.Services.AddIdentityInfraestructure(builder.Configuration);
 builder.Services.AddSharedInfraestructure(builder.Configuration);
 builder.Services.AddPersistenceInfraestructure(builder.Configuration);
 builder.Services.AddControllers();
