@@ -4,12 +4,16 @@ using Application.Exceptions;
 using Application.Interfaces;
 using Application.Wrappers;
 using Domain.Settings;
+using Identity.Helpers;
 using Identity.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -57,6 +61,20 @@ namespace Identity.Services
             }
 
             JwtSecurityToken jwtSecurityToken = await GenerateJWTToken(usuario);
+            AuthenticationResponse response = new AuthenticationResponse();
+            response.Id = usuario.Id;
+            response.JWToken = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
+            response.Email = usuario.Email;
+            response.UserName = usuario.UserName;
+
+            var rolesList = await _userManager.GetRolesAsync(usuario).ConfigureAwait(false);
+            response.Roles = rolesList.ToList();
+            response.IsVerified = usuario.EmailConfirmed;
+
+            var refreshToken = GenerateRefreshToken(ipAddress);
+            response.RefreshToken = refreshToken.Token;
+            return new Response<AuthenticationResponse>(response, $"Usuario Autenticado {usuario.UserName}");
+
         }
 
         public async Task<Response<string>> RegisterAsync(RegisterRequest request, string origin)
@@ -99,7 +117,60 @@ namespace Identity.Services
 
         private async Task<JwtSecurityToken> GenerateJWTToken(ApplicationUser usuario)
         {
+            var userClaims = await _userManager.GetClaimsAsync(usuario);
+            var roles = await _userManager.GetRolesAsync(usuario);
 
+            var roleClaims = new List<Claim>();
+
+            for (int i = 0; i < roles.Count; i++)
+            {
+                roleClaims.Add(new Claim("roles", roles[i]));
+            }
+
+            string ipAddress = Iphelper.GetIpAdress();
+
+            var claims = new[]
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, usuario.UserName),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(JwtRegisteredClaimNames.Email, usuario.Email),
+                new Claim("uid", usuario.Id),
+                new Claim("ip", ipAddress),
+            }
+            .Union(userClaims)
+            .Union(roleClaims);
+
+            var symmetricSecurityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
+            var signingCredentials = new SigningCredentials(symmetricSecurityKey, SecurityAlgorithms.HmacSha256);
+
+            var jwtSecurityToken = new JwtSecurityToken(
+                issuer: _jwtSettings.Issuer,
+                audience: _jwtSettings.Audience,
+                claims: claims,
+                expires: DateTime.Now.AddMinutes(_jwtSettings.DurationInMinutes),
+                signingCredentials: signingCredentials
+                );
+            
+            return jwtSecurityToken;
+        }
+
+        private RefreshToken GenerateRefreshToken(string ipAddress)
+        {
+            return new RefreshToken
+            {
+                Token = RandomTokenString(),
+                Expires = DateTime.Now.AddDays(7),
+                Created = DateTime.Now,
+                CreatedByIp = ipAddress
+            };
+        }
+
+        private string RandomTokenString()
+        {
+            using var rngCryptoServiceProvider = new RNGCryptoServiceProvider();
+            var randomBytes = new byte[40];
+            rngCryptoServiceProvider.GetBytes(randomBytes);
+            return BitConverter.ToString(randomBytes).Replace("-", "");
         }
     }
 }
