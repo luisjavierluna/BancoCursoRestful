@@ -102,7 +102,7 @@ namespace Identity.Services
             }
             else
             {
-                var result = await _userManager.CreateAsync(usuario, request.Passsword);
+                var result = await _userManager.CreateAsync(usuario, request.Password);
                 if (result.Succeeded) 
                 {
                     await _userManager.AddToRoleAsync(usuario, Roles.Basic.ToString());
