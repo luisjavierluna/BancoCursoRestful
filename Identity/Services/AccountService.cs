@@ -7,6 +7,7 @@ using Domain.Settings;
 using Identity.Helpers;
 using Identity.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
@@ -31,13 +32,13 @@ namespace Identity.Services
             UserManager<ApplicationUser> userManager, 
             RoleManager<IdentityRole> roleManager, 
             SignInManager<ApplicationUser> signInManager, 
-            JWTSettings jwtSettings,
+            IOptions< JWTSettings> jwtSettings,
             IDateTimeService dateTimeService)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _signInManager = signInManager;
-            _jwtSettings = jwtSettings;
+            _jwtSettings = jwtSettings.Value;
             _dateTimeService = dateTimeService;
         }
 
